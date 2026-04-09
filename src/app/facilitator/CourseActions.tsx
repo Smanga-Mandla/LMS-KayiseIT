@@ -1,0 +1,88 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+export default function CourseActions({
+  courseId,
+  courseTitle,
+}: {
+  courseId: string;
+  courseTitle: string;
+}) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    const typedName = window.prompt(
+      `Type the course title to confirm deletion:\n\n${courseTitle}`
+    );
+
+    if (!typedName) return;
+    if (typedName.trim() !== courseTitle) {
+      window.alert("Course title does not match. Deletion cancelled.");
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/facilitator/courses/${courseId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete course");
+        return;
+      }
+
+      router.refresh();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <Link
+        href={`/facilitator/courses/${courseId}`}
+        className="text-blue-600 dark:text-blue-400 font-medium hover:underline text-xs"
+      >
+        Manage →
+      </Link>
+      <Link
+        href={`/facilitator/courses/${courseId}/assignments`}
+        className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline text-xs"
+      >
+        Assignments
+      </Link>
+      <Link
+        href={`/facilitator/courses/${courseId}/participants`}
+        className="text-cyan-600 dark:text-cyan-400 font-medium hover:underline text-xs"
+      >
+        Participants
+      </Link>
+      <Link
+        href={`/facilitator/courses/${courseId}/gradebook`}
+        className="text-fuchsia-600 dark:text-fuchsia-400 font-medium hover:underline text-xs"
+      >
+        Gradebook
+      </Link>
+      <Link
+        href={`/facilitator/courses/${courseId}/reports`}
+        className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline text-xs"
+      >
+        Reports
+      </Link>
+      <button
+        type="button"
+        onClick={handleDelete}
+        disabled={deleting}
+        className="text-xs font-medium text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+      >
+        {deleting ? "Deleting..." : "Delete"}
+      </button>
+    </div>
+  );
+}
